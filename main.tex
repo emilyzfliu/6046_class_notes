@@ -1,0 +1,74 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+
+% Set page size and margins
+% Replace `letterpaper' with`a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\title{6.046 Review Notes}
+\author{Emily Liu}
+
+\begin{document}
+\maketitle
+
+\section{Robotic Coin Collection}
+Problem statement: Given a MxN grid, there are squares with coins. Robots are allowed to travel from the top left (1,1) corner of the grid to the bottom right (M,N) corner of the grid, only by travelling to the right and downwards. We want to find the minimum number of robots required in order to collect all of the coins on the grid.
+\\
+\\
+Our first intuition is to use a greedy strategy where the robot collects as many coins as possible on each run, which is easily achievable through dynamic programming. However, this is not ideal. One can picture this with a setup where the greedy strategy is for the robot to collect as many coins as possible running down middle but leaving coins at the sides which require multiple passes to collect, whereas the true optimal strategy is to use fewer suboptimal passes that do not intersect each other.
+\\
+\\
+To approach this problem, we need to observe that if one coin is to the lower left of another coin, they must be collected on separate passes, since the robot can't go up or left to collect the second coin when the first one of the two is collected. It then follows that to ensure all coins are collected, we need to implement a `peeling' algorithm wherein the lower leftmost coins are collected first and the layer after that is collected next, etc (by symmetry, we can also collect the upper rightmost coins first).
+
+\subsection*{Algorithm}
+\begin{enumerate}
+    \item Select the first column that contains a coin and go down to the bottom coin on that column.
+    \item Go right to the nearest column that has any coins below the row the robot is currently on.
+    \item Repeat until the bottom right corner is reached, and then repeat until all coins are collected. The number of robots used is the minimum possible.
+\end{enumerate}
+
+\subsection*{Proof of Optimality}
+In order for the algorithm to work, the $r$ paths $p_1$ ... $p_r$ must cover all possible coins (1). For all paths, there must also exist a coin from each path such that all such coins form a disjoint set (2). This is because the minimum number of robots should be equal to the number of disjoint sets in the coins.
+\\
+\\
+The first condition is easy to prove from the algorithm itself as the algorithm will not stop until all coins are collected. For the second condition, we consider two paths $p_i$, $p_j$ where $i < j$. For all coins in $p_j$, there exists a coin $c'$ in $p_i$ such that $(c, c')$ are disjoint, meaning that the x coordinate of $c'$ is less than that of $c$ and the y coordinate is greater. Thus, for any coin $c_r$ in the upper rightmost path $p_r$, we can find a coin in $p_{r-1}$ that is disjoint from $c_r$. By induction, we can find such coins in $p_{r-2}$ all the way to $p_1$. Therefore $r$ is the smallest number of robots possible. 
+
+\section{Median Finding}
+Problem statement: Given an unsorted list of numbers, find the median. More generally, find the number of rank $i$ aka the $i$th smallest number.
+\\
+\\
+We use a divide and conquer algorithm to solve this problem. Very generally, we want to select a pivot and group all numbers smaller than the pivot to the left and all numbers larger to the right. Then, we can very easily determine the rank of the pivot. If the rank of the pivot is too large, we recurse on the lesser (L) group with the same rank. If the rank is too small, we recurse on the greater (G) group with rank $i -$ rank$(x)$ where $x$ is the pivot point.
+\\
+\\
+The trick is that we want to select a pivot intelligently so we can guarantee a geometric decrease in subproblem size (as opposed to a linear decrease) - this will converge faster.
+
+\subsection*{Algorithm}
+\begin{enumerate}
+    \item First, we pad the end of the array with infinity values to make it a multiple of 10 (if necessary).
+    \item Divide the array into groups of 5 and find the median of each group in constant time.
+    \item Apply the first two steps to the set of group medians recursively to find the median of all of the numbers and select it as a pivot point. We observe that the number of elements either greater or less than the median will not exceed 7/10 of the overall number of elements - in other words, the median is 7/10 balanced. This also satisfies the condition we posed above.
+    \item We partition all other elements into L and G as described above and recurse.
+    \item The base case is when there are fewer than 10 elements in which case we can brute force in constant time.
+\end{enumerate}
+
+\subsection*{Runtime Analysis}
+The runtime of the algorithm is given by $T(n) = O(n) + T(\frac{7n}{10}) + T(\frac{n}{5})$. We observe that the sum of coefficients of the recursion is less than 1, which hints at it being a linear algorithm. We prove by induction that it is linear. The inductive hypothesis is $T(n) = O(n) \leq c_1 n$.
+
+\begin{align*}
+    T(n) &= O(n) + T(\frac{7n}{10}) + T(\frac{n}{5})\\
+    &= c_2 n + \frac{7}{10} c_1 n + \frac{n}{5} c_1 n \\
+    &= c_2 n + \frac{9}{10} c_1 n \\
+    &= c_1 n + (c_2 - \frac{1}{10} n \leq c_1 n
+\end{align*}
+
+if we appropriately select $c_1 \geq 10 c_2$.
+
+\end{document}
