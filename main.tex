@@ -6,7 +6,7 @@
 
 % Set page size and margins
 % Replace `letterpaper' with`a4paper' for UK/EU standard size
-\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage[letterpaper,top=3cm,bottom=3cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
 
 % Useful packages
 \usepackage{amsmath}
@@ -35,12 +35,12 @@ To approach this problem, we need to observe that if one coin is to the lower le
     \item Repeat until the bottom right corner is reached, and then repeat until all coins are collected. The number of robots used is the minimum possible.
 \end{enumerate}
 
-\subsection*{Proof of Optimality}
+\subsection*{Analysis}
 In order for the algorithm to work, the $r$ paths $p_1$ ... $p_r$ must cover all possible coins (1). For all paths, there must also exist a coin from each path such that all such coins form a disjoint set (2). This is because the minimum number of robots should be equal to the number of disjoint sets in the coins.
 \\
 \\
 The first condition is easy to prove from the algorithm itself as the algorithm will not stop until all coins are collected. For the second condition, we consider two paths $p_i$, $p_j$ where $i < j$. For all coins in $p_j$, there exists a coin $c'$ in $p_i$ such that $(c, c')$ are disjoint, meaning that the x coordinate of $c'$ is less than that of $c$ and the y coordinate is greater. Thus, for any coin $c_r$ in the upper rightmost path $p_r$, we can find a coin in $p_{r-1}$ that is disjoint from $c_r$. By induction, we can find such coins in $p_{r-2}$ all the way to $p_1$. Therefore $r$ is the smallest number of robots possible. 
-
+\newpage
 \section{Median Finding}
 Problem statement: Given an unsorted list of numbers, find the median. More generally, find the number of rank $i$ aka the $i$th smallest number.
 \\
@@ -59,7 +59,7 @@ The trick is that we want to select a pivot intelligently so we can guarantee a 
     \item The base case is when there are fewer than 10 elements in which case we can brute force in constant time.
 \end{enumerate}
 
-\subsection*{Runtime Analysis}
+\subsection*{Analysis}
 The runtime of the algorithm is given by $T(n) = O(n) + T(\frac{7n}{10}) + T(\frac{n}{5})$. We observe that the sum of coefficients of the recursion is less than 1, which hints at it being a linear algorithm. We prove by induction that it is linear. The inductive hypothesis is $T(n) = O(n) \leq c_1 n$.
 
 \begin{align*}
@@ -68,7 +68,37 @@ The runtime of the algorithm is given by $T(n) = O(n) + T(\frac{7n}{10}) + T(\fr
     &= c_2 n + \frac{9}{10} c_1 n \\
     &= c_1 n + (c_2 - \frac{1}{10} n \leq c_1 n
 \end{align*}
-
+\\
 if we appropriately select $c_1 \geq 10 c_2$.
 
+\newpage
+\section*{Fast Multiplication (Karatsuba's Method)}
+This algorithm applies a divide and conquer technique to perform multiplication of two $n$ digit numbers in faster than $O(n^2)$ time.
+\\
+\\
+To gain intuition, consider the two digit product $ab \times cd$. This is equal to $ac \times 100 + cd + (bc + ad) \times 10$. However, we note that $bc + ad = (a + b) (c + d) - ac - bd$.
+\\
+\\
+We extend this to higher digit numbers. We can recursively apply the algorithm to find $ac$, $bd$, and $(a+b)(c+d)$ (we can obtain the sum in $O(n)$ time). We then obtain $bc + ad$ in $O(n)$ time by the subtraction operation.
+\subsection*{Analysis}
+The algorithm runtime is defined by $T(n) = 3 T(n/2) + \theta (n)$, which evaluates to $\theta(n^{\log_2 3})$ by the Master Theorem.
+\section*{Matrix Multiplication Checking}
+We implement a random algorithm to check if $AB = C$ modulo, where $A, B,$ and $C$ are all $n \times n$ matrices. The algorithm is guaranteed to return true if $AB = C$ and returns true over $1/2$ of the time if $AB \neq C$. We can run the algorithm $k << n$ times to improve the confidence of our answer.
+\subsection*{Algorithm (Frievald)}
+The algorithm is to generate a random $n \times 1$ vector $r$ and perform the computations $A(Br)$ and $Cr$ in $O(n^2)$ time. If $ABr = Cr$, return True; otherwise, return False.
+\subsection*{Analysis}
+It is trivial to see why $ABr = Cr$ always if $AB = C$. In the case where $ABr \neq Cr$, we consider the matrix $D = AB - C$ and want to find the probability that $Dr \neq 0$ given $D \neq 0$.\\
+\\
+We observe that for any possible $D \neq 0$, we can select a one-hot $v$ such that $Dv \neq 0$ just by matching the position equal to 1 with a nonzero element in $D$. Then, for every $r_{bad}$ such that $D r_{bad} = 0$, we can identify a new vector $r' = r_{bad} + v$ such that $D r' \neq 0$.\\
+\\
+Now, we need to show that each $r_{bad}$ has a corresponding $r'$ that is unique. Namely, if $r' = r + v = q + v$ and $Dr = Dq = 0$, then we prove that $r = q$. For every index $j = [1...n]$, we get $r_j' = (r_j + v_j) mod 2 = (q_j + v_j) mod 2$, and therefore $r_j = q_j$ for all $j$.
+\newpage
+\section*{Union Find}
+Suppose we have a collection of sets. We want a data structure that can perform the operations MAKE\_SET($x$), which creates a new set with a new element, UNION($x, y$), which merges the set containing $x$ and the set containing $y$, and FIND\_SET($x$), which returns the set containing $x$. We can select one element in each set to serve as the ID for that set.
+\subsection*{Algorithm}
+MAKE\_SET($x$) is trivially $O(1)$ since we create a new set with only the element $x$ (we assume $x$ is guaranteed to be a new element; otherwise we can use the other functions to check if $x$ is already in the set).\\
+\\
+We can use a shallow tree data structure to store the sets. Each set ID element is the root of the tree. In FIND\_SET, we assume we have a pointer to the element in the data structure. We find the path to the root in $O(h)$ time. To maintain shallowness of the tree, we point each element we traverse directly to the root of the tree.\\
+\\
+In the UNION operation, we first perform FIND\_SET to find the two sets, then point the head of the smaller tree to the head of the larger tree, thereby merging the two sets. This is also $O(h)$ which we attempt to minimize through the parent-reassigning operation in FIND\_SET.
 \end{document}
