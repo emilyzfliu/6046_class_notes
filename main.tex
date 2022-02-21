@@ -10,6 +10,8 @@
 
 % Useful packages
 \usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{bbm}
 \usepackage{graphicx}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
 
@@ -41,7 +43,7 @@ In order for the algorithm to work, the $r$ paths $p_1$ ... $p_r$ must cover all
 \\
 The first condition is easy to prove from the algorithm itself as the algorithm will not stop until all coins are collected. For the second condition, we consider two paths $p_i$, $p_j$ where $i < j$. For all coins in $p_j$, there exists a coin $c'$ in $p_i$ such that $(c, c')$ are disjoint, meaning that the x coordinate of $c'$ is less than that of $c$ and the y coordinate is greater. Thus, for any coin $c_r$ in the upper rightmost path $p_r$, we can find a coin in $p_{r-1}$ that is disjoint from $c_r$. By induction, we can find such coins in $p_{r-2}$ all the way to $p_1$. Therefore $r$ is the smallest number of robots possible. 
 \newpage
-\section{Median Finding}
+\section{Median Finding (Divide and Conquer)}
 Problem statement: Given an unsorted list of numbers, find the median. More generally, find the number of rank $i$ aka the $i$th smallest number.
 \\
 \\
@@ -72,7 +74,7 @@ The runtime of the algorithm is given by $T(n) = O(n) + T(\frac{7n}{10}) + T(\fr
 if we appropriately select $c_1 \geq 10 c_2$.
 
 \newpage
-\section*{Fast Multiplication (Karatsuba's Method)}
+\section{Fast Multiplication (Karatsuba's Method)}
 This algorithm applies a divide and conquer technique to perform multiplication of two $n$ digit numbers in faster than $O(n^2)$ time.
 \\
 \\
@@ -82,7 +84,7 @@ To gain intuition, consider the two digit product $ab \times cd$. This is equal 
 We extend this to higher digit numbers. We can recursively apply the algorithm to find $ac$, $bd$, and $(a+b)(c+d)$ (we can obtain the sum in $O(n)$ time). We then obtain $bc + ad$ in $O(n)$ time by the subtraction operation.
 \subsection*{Analysis}
 The algorithm runtime is defined by $T(n) = 3 T(n/2) + \theta (n)$, which evaluates to $\theta(n^{\log_2 3})$ by the Master Theorem.
-\section*{Matrix Multiplication Checking}
+\section{Matrix Multiplication Checking}
 We implement a random algorithm to check if $AB = C$ modulo, where $A, B,$ and $C$ are all $n \times n$ matrices. The algorithm is guaranteed to return true if $AB = C$ and returns true over $1/2$ of the time if $AB \neq C$. We can run the algorithm $k << n$ times to improve the confidence of our answer.
 \subsection*{Algorithm (Frievald)}
 The algorithm is to generate a random $n \times 1$ vector $r$ and perform the computations $A(Br)$ and $Cr$ in $O(n^2)$ time. If $ABr = Cr$, return True; otherwise, return False.
@@ -93,7 +95,7 @@ We observe that for any possible $D \neq 0$, we can select a one-hot $v$ such th
 \\
 Now, we need to show that each $r_{bad}$ has a corresponding $r'$ that is unique. Namely, if $r' = r + v = q + v$ and $Dr = Dq = 0$, then we prove that $r = q$. For every index $j = [1...n]$, we get $r_j' = (r_j + v_j) mod 2 = (q_j + v_j) mod 2$, and therefore $r_j = q_j$ for all $j$.
 \newpage
-\section*{Union Find}
+\section{Union Find}
 Suppose we have a collection of sets. We want a data structure that can perform the operations MAKE\_SET($x$), which creates a new set with a new element, UNION($x, y$), which merges the set containing $x$ and the set containing $y$, and FIND\_SET($x$), which returns the set containing $x$. We can select one element in each set to serve as the ID for that set.
 \subsection*{Algorithm}
 MAKE\_SET($x$) is trivially $O(1)$ since we create a new set with only the element $x$ (we assume $x$ is guaranteed to be a new element; otherwise we can use the other functions to check if $x$ is already in the set).\\
@@ -101,4 +103,58 @@ MAKE\_SET($x$) is trivially $O(1)$ since we create a new set with only the eleme
 We can use a shallow tree data structure to store the sets. Each set ID element is the root of the tree. In FIND\_SET, we assume we have a pointer to the element in the data structure. We find the path to the root in $O(h)$ time. To maintain shallowness of the tree, we point each element we traverse directly to the root of the tree.\\
 \\
 In the UNION operation, we first perform FIND\_SET to find the two sets, then point the head of the smaller tree to the head of the larger tree, thereby merging the two sets. This is also $O(h)$ which we attempt to minimize through the parent-reassigning operation in FIND\_SET.
+\\
+\section{Self-Organizing lists (Competitive Analysis)}
+We wish to maintain a list $L$ consisting of $N$ elements with distinct keys. We want this list to support one operation, ACCESS($x$), by finding the element $x$ in the list. After accessing the element, we reorder the list by transposing adjacent elements.\\
+\\
+The strategy we use is the move-to-front (MTF) strategy in which we take the most recently accessed element and move it to the front, and adjust all other elements as necessary by shifting them down.
+\subsection*{Analysis}
+To analyze, we compare the cost of the online algorithm to that of the optimal offline algorithm (competitive analysis). The online algorithm is said to be $\alpha$-competitive to the offline algorithm if $c_{online} \leq \alpha c_{offline} + k$ where $\alpha$ and $k$ are both constants independent of $|L|$.\\
+\\
+We will prove that the MTF strategy is 4-competitive. At each step, the cost of MTF of retrieving the $i$th element and adjusting the array is $c_i = 2 \text{rank}_{L_i}(x_i) - 1$ and the optimal cost is $c_i^* = 2 \text{rank}_{L_i^*}(x_i) + t_i$.
+\\
+We use the potential function $\Phi = 2$ [\# inversions between $L_i$ and $L_i^*$], where an inversion is defined by a pair $(x, y)$ such that $\text{rank}_{L_i}(x) < \text{rank}_{L_i^*}(y)$ and $\text{rank}_{L_i^*}(x) > \text{rank}_{L_i}(y)$. The number of transpositions needed to convert $L_i$ to $L_i^*$ is lower bounded by the number of inversions between ($L_i$, $L_i^*$).\\
+\\
+Now, we will define $A$ as the set of all elements that are before $x_i$ in both $L_i$ and $L_i^*$, $B$ as the set of elements after $x_i$ in $L_i^*$ but before in $L_i$, $C$ as the set of elements after $x_i$ in $L_i$ but before in $L_i^*$, and $D$ as the set of elements after $x_i$ in both $L_i$ and $L_i^*$. Then, rank$_{L_i}(x_i)$ = $|A| + |B| + 1$ and rank$_{L_i^*}(x_i)$ = $|A| + |C| + 1$.\\
+\\
+After moving $x_i$ to the front of the array in MTF, the elements in $B$ are no longer inversions but the elements in $A$ are new inversions, meaning $\Delta \Phi \leq 2(|A| - |B| + t_i)$. We then evaluate
+\begin{align*}
+    \hat{c_i} &= c_i + \Delta \Phi\\
+    &= 2r - 1 + 2(|A| - |B| + t_i) &r = |A| + |B| + 1\\
+    \hat{c_i} &\leq 4|A| + 1 + 2 t_i &r^* = |A| + |C| + 1 \geq |A| + 1 \implies |A| = r^* - 1\\
+    \hat{c_i} &\leq 4 (r^* - 1)  + 1 + 2 t_i \leq 4 (r^* + t_i) = 4 c_i^*
+\end{align*}
+\section{Hashing I}
+We are already familiar with hashing. In 6.006, we operated under the simplified uniform hashing assumption which assumes that the distribution of keys to hash function values will always be uniformly random. We determined that the average access time is $O(1 + \alpha)$ where $\alpha = \frac{n}{m}$, $n$ is the number of entries in the table, and $m$ is the table capacity. The issue with a naive formulation (such as modulo) is that the function can be easily exploited such that all entries are hash collisions.
+\subsection*{Universal Hashing}
+Suppose we have a hash family $\mathcal{H}$ consisting of many hypotheses $h$. If a hash family is universal, then it means that
+\begin{align*}
+    P_{h \in \mathcal{H}} (h(k_1) = h(k_2)) \leq \frac{1}{m}
+\end{align*}
+for all pairs of fixed keys $k_1 \neq k_2$.
+\subsection*{Theorem: Universal hashing and $O(1 + \alpha)$}
+For $n$ arbitrary distinct keys $k_1 ... k_n$ and a random $h \in \mathcal{H}$,
+\begin{align*}
+    \mathbb{E}_h\left[\text{\# keys that collide w/ any } k_i\right] \leq 1 + \alpha = 1 + \frac{n}{m}.
+\end{align*}
+We will prove this by linearity of expectation. Let $I_{ij} = \mathbbm{1}\left[h(k_i) = h(k_j)\right]$.
+\begin{align*}
+    \mathbb{E}_h\left[\text{\# keys that collide w/ } k_i\right] &= \mathbb{E}_{h \in \mathcal{H}} \sum_j I_{ij}\\
+    &= \sum_j \mathbb{E}_{h \in \mathcal{H}}I_{ij} = \sum_j P(h(k_i) = h(k_j)\\
+    &= 1 + \sum_{j \neq i} P(h(k_i) = h(k_j) = 1 + \frac{n-1}{m} = 1 + \alpha.
+\end{align*}
+Therefore, a universal hash family is guaranteed to uphold the optimal expected hash runtime.
+\subsection*{Constructing a Universal Hash Family: Dot Product Hash Function}
+How do we construct a universal hash function? One way is to populate the hash table with random uniformly generated values from $0$ to $m-1$. The issue with this is that a universal hash table would occupy a space of $\Theta(|U|)$ (where $|U|$ is the size of the universe, or the set of all hashable things), meaning it is highly impractical.\\
+\\
+The dot product hash family is a universal hash family that takes up less space and is more practical to implement. To implement the dot product hash function, we will first assume $m$ is prime and $|U| = m^r$. We can easily pad $U$ to be of size $m^r$ if it is not already. Then, we let the set of keys $\mathbf{k} = (k_0, k_1, ... k_{r-1})$ and the descriptions (coefficients) be $\mathbf{a} = (a_0, a_1, ... a_{r-1})$. Note that both $\mathbf{k}$ and $\mathbf{a}$ are vectors, so we define our hash function as $h_{\mathbf{a}} (\mathbf{k}) = \mathbf{a} \cdot \mathbf{k} \mod m = \sum_{i=0}^{r-1} a_i k_i \mod m$.\\
+\\
+The hash family $\mathcal{H}$ is described as the set of all $h_{\mathbf{a}}$ where all values of $\mathbf{a}$ are between 0 and $m-1$. Now, the space it occupies is $\Theta(r) = \Theta(\log |U|)$, which is more practical than $\Theta(|U|)$.\\
+\\
+Now, we need to prove that the dot product family is universal, or $P_h(h(k) = h(k')) \leq \frac{1}{m}$, where $k, k' \in \mathbb{R}^r$. Without loss of generality, assume that $k$ and $k'$ differ at their first location ($k_0 \neq k'_0$). We then have
+\begin{align*}
+    P_\mathbb{a}(h_\mathbb{a}(k) = h_\mathbb{a} (k')) &= P_\mathbb{a} (\mathbb{a} \cdot k = \mathbb{a} \cdot k' \mod m)\\
+    &= P_\mathbb{a} (a_0 (k_0 - k'_0) = \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m)
+\end{align*}
+Here, we note that the first term is guaranteed to not be 0 since $k_0 \neq k'_0$. That means we can calculate the modulo inverse $(k_0 - k'_0)^{-1}$ which is unique since $m$ is prime. This means that our expression evaluates to $P_\mathbb{a} (a_0 = (k_0 - k'_0)^{-1} \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m)$, meaning that the expression on the right is independent of $a_0$. This means that we can first pick $a_1 ... a_{r-1}$ at random and then pick $a_0$ at random independently (principle of deferred decisions). If we let $(k_0 - k'_0)^{-1} \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m = k$, then we can see that $P(a_0 = k) = \frac{1}{m}$ and therefore the dot product hash family is universal.
 \end{document}
