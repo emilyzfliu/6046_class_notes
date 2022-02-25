@@ -153,8 +153,27 @@ The hash family $\mathcal{H}$ is described as the set of all $h_{\mathbf{a}}$ wh
 \\
 Now, we need to prove that the dot product family is universal, or $P_h(h(k) = h(k')) \leq \frac{1}{m}$, where $k, k' \in \mathbb{R}^r$. Without loss of generality, assume that $k$ and $k'$ differ at their first location ($k_0 \neq k'_0$). We then have
 \begin{align*}
-    P_\mathbb{a}(h_\mathbb{a}(k) = h_\mathbb{a} (k')) &= P_\mathbb{a} (\mathbb{a} \cdot k = \mathbb{a} \cdot k' \mod m)\\
-    &= P_\mathbb{a} (a_0 (k_0 - k'_0) = \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m)
+    P_\mathbf{a}(h_\mathbf{a}(k) = h_\mathbf{a} (k')) &= P_\mathbf{a} (\mathbf{a} \cdot k = \mathbf{a} \cdot k' \mod m)\\
+    &= P_\mathbf{a} (a_0 (k_0 - k'_0) = \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m)
 \end{align*}
-Here, we note that the first term is guaranteed to not be 0 since $k_0 \neq k'_0$. That means we can calculate the modulo inverse $(k_0 - k'_0)^{-1}$ which is unique since $m$ is prime. This means that our expression evaluates to $P_\mathbb{a} (a_0 = (k_0 - k'_0)^{-1} \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m)$, meaning that the expression on the right is independent of $a_0$. This means that we can first pick $a_1 ... a_{r-1}$ at random and then pick $a_0$ at random independently (principle of deferred decisions). If we let $(k_0 - k'_0)^{-1} \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m = k$, then we can see that $P(a_0 = k) = \frac{1}{m}$ and therefore the dot product hash family is universal.
+Here, we note that the first term is guaranteed to not be 0 since $k_0 \neq k'_0$. That means we can calculate the modulo inverse $(k_0 - k'_0)^{-1}$ which is unique since $m$ is prime. This means that our expression evaluates to $P_\mathbf{a} (a_0 = (k_0 - k'_0)^{-1} \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m)$, meaning that the expression on the right is independent of $a_0$. This means that we can first pick $a_1 ... a_{r-1}$ at random and then pick $a_0$ at random independently (principle of deferred decisions). If we let $(k_0 - k'_0)^{-1} \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m = k$, then we can see that $P(a_0 = k) = \frac{1}{m}$ and therefore the dot product hash family is universal.
+\section{Hashing II}
+We will continue to discuss different hashing strategies.
+\subsection*{Open Addressing}
+Open addressing is when instead of having a hashing function $h(x)$, you have a probing function $p(x, i)$ that instructs you how to reselect an entry in the hash table if the current entry is occupied.\\
+When you select a key, you first compute $p(x, 0)$. If the table at $p(x, 0)$ is vacant, you can place the key there. If occupied, you keep incrementing $i$ until you reach a $p(x, i)$ that is vacant.\\
+\\
+When deleting elements from the table, you need to place a marker indicating an element was deleted so the search operation for the hash set knows to continue looking further in the sequence. However, a spot belonging to a deleted element can still be overwritten by new inserts.
+\subsubsection*{Uniform hashing assumption}
+Assume that every probing function generates a sequence $p(k, 0)$, ... $p(k, m-1)$ that is a uniformly random permutation of $\{0 ... m-1\}$. Then, the probability that each $p(k, i)$ hits an empty slot is $1 - \alpha$, meaning the expected number of probes you will need to perform is upper-bounded by $\frac{1}{1 - \alpha}$.
+\subsubsection*{Open Addressing in Practice}
+One example of open addressing is linear probing, where $p(k, i) = h(k) + i \mod m$ and $h$ is a hash function selected from a uniform hash family. The issue with linear probing is that it results in clusters of occupied spaces that could compromise efficiency. Quadratic probing where $p(k, i) = h(k) + i^2 \mod m$ breaks up these clusters. Double hashing is where you select two hash functions $h_1$ and $h_2$ from the uniform hash family and $p(k, i) = h_1(k) + i\times h_2(k) \mod m$.
+\subsection*{Perfect Hashing}
+Perfect Hashing is a solution to a static dictionary problem where you are given $n$ keys to build a hash table in $O(n) \log ^c (n)$ build time that occupies $O(n)$ space and has $O(1)$ worst case search time. Since it is a static dictionary, no keys will be deleted.\\
+\\
+We will accomplish this using a hash table of capacity $m$ and associated hash function $h_1$. For each spot $j$, we point to a hash table of size $l_j^2$ where $l_j$ is the number of collisions that occur at position $j$ and associated hash $h_{2,j}$. If $\sum l_j^2 < cn$ for some predetermined $c$, we reselect $h_1$. Then, we select hash functions for the smaller hash tables, and if there is a collision in the small hash table at any $j$, we reselect $h_{2, j}$. Therefore, we only need 2 accesses to search for any element in the table.
+\subsubsection*{Analysis}
+We look at the expected number of times we will need to reselect $h_2$. For a fixed $j$, the probability $P(h_{2, j}(k) = h_{2, j}(k')) \leq {l_j \choose 2} \times \frac{1}{l_j^2} \leq \frac{1}{2}$, meaning that the expected number of times you would need to reselect is 2 for each $j$.\\
+\\
+We now look at the expected number of times we need to reselect $h_1$, or the probability that $\mathbb{E}(\sum l_j^2) \leq c n$. Observing that $l_j$ elements means $l_j \choose 2$ collisions under $h_1$, $\mathbb{E}(\sum l_j^2) \leq \mathbb{E}($number of collisions under $h_1) + O(n)$. This is less than or equal to ${n \choose 2}*\frac{1}{m} + O(n) = c' n$, meaning that the probability of reselecting is bounded by $\frac{c'}{c}$ via Markov.
 \end{document}
