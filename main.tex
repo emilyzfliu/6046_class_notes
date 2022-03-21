@@ -1,33 +1,72 @@
-\documentclass{article}
+\documentclass[10pt]{article}
 
-% Language setting
-% Replace `english' with e.g. `spanish' to change the document language
-\usepackage[english]{babel}
-
-% Set page size and margins
-% Replace `letterpaper' with`a4paper' for UK/EU standard size
-\usepackage[letterpaper,top=3cm,bottom=3cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
-
-% Useful packages
+\usepackage{booktabs}
 \usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{bbm}
+\usepackage{listings}
+\usepackage{amssymb}
 \usepackage{graphicx}
-\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{float}
+\usepackage{todonotes}
+\usepackage[section]{placeins}
 
-\title{6.046 Review Notes}
-\author{Emily Liu}
+
+\usepackage[
+backend=biber,
+style=numeric,
+]{biblatex}
+\addbibresource{sample.bib}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+    }
+
+\urlstyle{same}
+
+% Formatting
+\usepackage[left=1in, right=1in]{geometry}
+
+\newcommand{\toptitlebar}{
+  \hrule height 4pt
+  \vskip 0.25in
+  \vskip -\parskip%
+}
+\newcommand{\bottomtitlebar}{
+  \vskip 0.29in
+  \vskip -\parskip
+  \hrule height 1pt
+  \vskip 0.09in%
+}
+\renewcommand{\maketitle}{
+  \vbox{%
+    \hsize\textwidth
+    \linewidth\hsize
+    \vskip 0.1in
+    \toptitlebar
+    \centering
+    {\LARGE\bf 6.046 Review Notes\par}
+    \bottomtitlebar
+    \begin{tabular}[t]{c}\bf\rule{0pt}{24pt}
+      Emily Liu
+    \end{tabular}%
+  }
+}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5.5pt}
 
 \begin{document}
 \maketitle
 
 \section{Robotic Coin Collection}
 Problem statement: Given a MxN grid, there are squares with coins. Robots are allowed to travel from the top left (1,1) corner of the grid to the bottom right (M,N) corner of the grid, only by travelling to the right and downwards. We want to find the minimum number of robots required in order to collect all of the coins on the grid.
-\\
-\\
+
 Our first intuition is to use a greedy strategy where the robot collects as many coins as possible on each run, which is easily achievable through dynamic programming. However, this is not ideal. One can picture this with a setup where the greedy strategy is for the robot to collect as many coins as possible running down middle but leaving coins at the sides which require multiple passes to collect, whereas the true optimal strategy is to use fewer suboptimal passes that do not intersect each other.
-\\
-\\
+
 To approach this problem, we need to observe that if one coin is to the lower left of another coin, they must be collected on separate passes, since the robot can't go up or left to collect the second coin when the first one of the two is collected. It then follows that to ensure all coins are collected, we need to implement a `peeling' algorithm wherein the lower leftmost coins are collected first and the layer after that is collected next, etc (by symmetry, we can also collect the upper rightmost coins first).
 
 \subsection*{Algorithm}
@@ -39,17 +78,14 @@ To approach this problem, we need to observe that if one coin is to the lower le
 
 \subsection*{Analysis}
 In order for the algorithm to work, the $r$ paths $p_1$ ... $p_r$ must cover all possible coins (1). For all paths, there must also exist a coin from each path such that all such coins form a disjoint set (2). This is because the minimum number of robots should be equal to the number of disjoint sets in the coins.
-\\
-\\
+
 The first condition is easy to prove from the algorithm itself as the algorithm will not stop until all coins are collected. For the second condition, we consider two paths $p_i$, $p_j$ where $i < j$. For all coins in $p_j$, there exists a coin $c'$ in $p_i$ such that $(c, c')$ are disjoint, meaning that the x coordinate of $c'$ is less than that of $c$ and the y coordinate is greater. Thus, for any coin $c_r$ in the upper rightmost path $p_r$, we can find a coin in $p_{r-1}$ that is disjoint from $c_r$. By induction, we can find such coins in $p_{r-2}$ all the way to $p_1$. Therefore $r$ is the smallest number of robots possible. 
-\newpage
+
 \section{Median Finding (Divide and Conquer)}
 Problem statement: Given an unsorted list of numbers, find the median. More generally, find the number of rank $i$ aka the $i$th smallest number.
-\\
-\\
+
 We use a divide and conquer algorithm to solve this problem. Very generally, we want to select a pivot and group all numbers smaller than the pivot to the left and all numbers larger to the right. Then, we can very easily determine the rank of the pivot. If the rank of the pivot is too large, we recurse on the lesser (L) group with the same rank. If the rank is too small, we recurse on the greater (G) group with rank $i -$ rank$(x)$ where $x$ is the pivot point.
-\\
-\\
+
 The trick is that we want to select a pivot intelligently so we can guarantee a geometric decrease in subproblem size (as opposed to a linear decrease) - this will converge faster.
 
 \subsection*{Algorithm}
@@ -70,17 +106,14 @@ The runtime of the algorithm is given by $T(n) = O(n) + T(\frac{7n}{10}) + T(\fr
     &= c_2 n + \frac{9}{10} c_1 n \\
     &= c_1 n + (c_2 - \frac{1}{10} n \leq c_1 n
 \end{align*}
-\\
+
 if we appropriately select $c_1 \geq 10 c_2$.
 
-\newpage
 \section{Fast Multiplication (Karatsuba's Method)}
 This algorithm applies a divide and conquer technique to perform multiplication of two $n$ digit numbers in faster than $O(n^2)$ time.
-\\
-\\
+
 To gain intuition, consider the two digit product $ab \times cd$. This is equal to $ac \times 100 + cd + (bc + ad) \times 10$. However, we note that $bc + ad = (a + b) (c + d) - ac - bd$.
-\\
-\\
+
 We extend this to higher digit numbers. We can recursively apply the algorithm to find $ac$, $bd$, and $(a+b)(c+d)$ (we can obtain the sum in $O(n)$ time). We then obtain $bc + ad$ in $O(n)$ time by the subtraction operation.
 \subsection*{Analysis}
 The algorithm runtime is defined by $T(n) = 3 T(n/2) + \theta (n)$, which evaluates to $\theta(n^{\log_2 3})$ by the Master Theorem.
@@ -89,34 +122,34 @@ We implement a random algorithm to check if $AB = C$ modulo, where $A, B,$ and $
 \subsection*{Algorithm (Frievald)}
 The algorithm is to generate a random $n \times 1$ vector $r$ and perform the computations $A(Br)$ and $Cr$ in $O(n^2)$ time. If $ABr = Cr$, return True; otherwise, return False.
 \subsection*{Analysis}
-It is trivial to see why $ABr = Cr$ always if $AB = C$. In the case where $ABr \neq Cr$, we consider the matrix $D = AB - C$ and want to find the probability that $Dr \neq 0$ given $D \neq 0$.\\
-\\
-We observe that for any possible $D \neq 0$, we can select a one-hot $v$ such that $Dv \neq 0$ just by matching the position equal to 1 with a nonzero element in $D$. Then, for every $r_{bad}$ such that $D r_{bad} = 0$, we can identify a new vector $r' = r_{bad} + v$ such that $D r' \neq 0$.\\
-\\
+It is trivial to see why $ABr = Cr$ always if $AB = C$. In the case where $ABr \neq Cr$, we consider the matrix $D = AB - C$ and want to find the probability that $Dr \neq 0$ given $D \neq 0$.
+
+We observe that for any possible $D \neq 0$, we can select a one-hot $v$ such that $Dv \neq 0$ just by matching the position equal to 1 with a nonzero element in $D$. Then, for every $r_{bad}$ such that $D r_{bad} = 0$, we can identify a new vector $r' = r_{bad} + v$ such that $D r' \neq 0$.
+
 Now, we need to show that each $r_{bad}$ has a corresponding $r'$ that is unique. Namely, if $r' = r + v = q + v$ and $Dr = Dq = 0$, then we prove that $r = q$. For every index $j = [1...n]$, we get $r_j' = (r_j + v_j) mod 2 = (q_j + v_j) mod 2$, and therefore $r_j = q_j$ for all $j$.
-\newpage
+
 \section{Union Find}
 Suppose we have a collection of sets. We want a data structure that can perform the operations MAKE\_SET($x$), which creates a new set with a new element, UNION($x, y$), which merges the set containing $x$ and the set containing $y$, and FIND\_SET($x$), which returns the set containing $x$. We can select one element in each set to serve as the ID for that set.
 \subsection*{Algorithm}
-MAKE\_SET($x$) is trivially $O(1)$ since we create a new set with only the element $x$ (we assume $x$ is guaranteed to be a new element; otherwise we can use the other functions to check if $x$ is already in the set).\\
-\\
-We can use a shallow tree data structure to store the sets. Each set ID element is the root of the tree. In FIND\_SET, we assume we have a pointer to the element in the data structure. We find the path to the root in $O(h)$ time. To maintain shallowness of the tree, we point each element we traverse directly to the root of the tree.\\
-\\
+MAKE\_SET($x$) is trivially $O(1)$ since we create a new set with only the element $x$ (we assume $x$ is guaranteed to be a new element; otherwise we can use the other functions to check if $x$ is already in the set).
+
+We can use a shallow tree data structure to store the sets. Each set ID element is the root of the tree. In FIND\_SET, we assume we have a pointer to the element in the data structure. We find the path to the root in $O(h)$ time. To maintain shallowness of the tree, we point each element we traverse directly to the root of the tree.
+
 In the UNION operation, we first perform FIND\_SET to find the two sets, then point the head of the smaller tree to the head of the larger tree, thereby merging the two sets. This is also $O(h)$ which we attempt to minimize through the parent-reassigning operation in FIND\_SET.
-\\
+
 \section{Self-Organizing lists (Competitive Analysis)}
-We wish to maintain a list $L$ consisting of $N$ elements with distinct keys. We want this list to support one operation, ACCESS($x$), by finding the element $x$ in the list. After accessing the element, we reorder the list by transposing adjacent elements.\\
-\\
+We wish to maintain a list $L$ consisting of $N$ elements with distinct keys. We want this list to support one operation, ACCESS($x$), by finding the element $x$ in the list. After accessing the element, we reorder the list by transposing adjacent elements.
+
 The strategy we use is the move-to-front (MTF) strategy in which we take the most recently accessed element and move it to the front, and adjust all other elements as necessary by shifting them down.
 \subsection*{Analysis}
-To analyze, we compare the cost of the online algorithm to that of the optimal offline algorithm (competitive analysis). The online algorithm is said to be $\alpha$-competitive to the offline algorithm if $c_{online} \leq \alpha c_{offline} + k$ where $\alpha$ and $k$ are both constants independent of $|L|$.\\
-\\
+To analyze, we compare the cost of the online algorithm to that of the optimal offline algorithm (competitive analysis). The online algorithm is said to be $\alpha$-competitive to the offline algorithm if $c_{online} \leq \alpha c_{offline} + k$ where $\alpha$ and $k$ are both constants independent of $|L|$.
+
 We will prove that the MTF strategy is 4-competitive. At each step, the cost of MTF of retrieving the $i$th element and adjusting the array is $c_i = 2 \text{rank}_{L_i}(x_i) - 1$ and the optimal cost is $c_i^* = 2 \text{rank}_{L_i^*}(x_i) + t_i$.
-\\
-We use the potential function $\Phi = 2$ [\# inversions between $L_i$ and $L_i^*$], where an inversion is defined by a pair $(x, y)$ such that $\text{rank}_{L_i}(x) < \text{rank}_{L_i^*}(y)$ and $\text{rank}_{L_i^*}(x) > \text{rank}_{L_i}(y)$. The number of transpositions needed to convert $L_i$ to $L_i^*$ is lower bounded by the number of inversions between ($L_i$, $L_i^*$).\\
-\\
-Now, we will define $A$ as the set of all elements that are before $x_i$ in both $L_i$ and $L_i^*$, $B$ as the set of elements after $x_i$ in $L_i^*$ but before in $L_i$, $C$ as the set of elements after $x_i$ in $L_i$ but before in $L_i^*$, and $D$ as the set of elements after $x_i$ in both $L_i$ and $L_i^*$. Then, rank$_{L_i}(x_i)$ = $|A| + |B| + 1$ and rank$_{L_i^*}(x_i)$ = $|A| + |C| + 1$.\\
-\\
+
+We use the potential function $\Phi = 2$ [\# inversions between $L_i$ and $L_i^*$], where an inversion is defined by a pair $(x, y)$ such that $\text{rank}_{L_i}(x) < \text{rank}_{L_i^*}(y)$ and $\text{rank}_{L_i^*}(x) > \text{rank}_{L_i}(y)$. The number of transpositions needed to convert $L_i$ to $L_i^*$ is lower bounded by the number of inversions between ($L_i$, $L_i^*$).
+
+Now, we will define $A$ as the set of all elements that are before $x_i$ in both $L_i$ and $L_i^*$, $B$ as the set of elements after $x_i$ in $L_i^*$ but before in $L_i$, $C$ as the set of elements after $x_i$ in $L_i$ but before in $L_i^*$, and $D$ as the set of elements after $x_i$ in both $L_i$ and $L_i^*$. Then, rank$_{L_i}(x_i)$ = $|A| + |B| + 1$ and rank$_{L_i^*}(x_i)$ = $|A| + |C| + 1$.
+
 After moving $x_i$ to the front of the array in MTF, the elements in $B$ are no longer inversions but the elements in $A$ are new inversions, meaning $\Delta \Phi \leq 2(|A| - |B| + t_i)$. We then evaluate
 \begin{align*}
     \hat{c_i} &= c_i + \Delta \Phi\\
@@ -124,7 +157,7 @@ After moving $x_i$ to the front of the array in MTF, the elements in $B$ are no 
     \hat{c_i} &\leq 4|A| + 1 + 2 t_i &r^* = |A| + |C| + 1 \geq |A| + 1 \implies |A| = r^* - 1\\
     \hat{c_i} &\leq 4 (r^* - 1)  + 1 + 2 t_i \leq 4 (r^* + t_i) = 4 c_i^*
 \end{align*}
-\section{Hashing I}
+\section{Hashing}
 We are already familiar with hashing. In 6.006, we operated under the simplified uniform hashing assumption which assumes that the distribution of keys to hash function values will always be uniformly random. We determined that the average access time is $O(1 + \alpha)$ where $\alpha = \frac{n}{m}$, $n$ is the number of entries in the table, and $m$ is the table capacity. The issue with a naive formulation (such as modulo) is that the function can be easily exploited such that all entries are hash collisions.
 \subsection*{Universal Hashing}
 Suppose we have a hash family $\mathcal{H}$ consisting of many hypotheses $h$. If a hash family is universal, then it means that
@@ -137,7 +170,7 @@ For $n$ arbitrary distinct keys $k_1 ... k_n$ and a random $h \in \mathcal{H}$,
 \begin{align*}
     \mathbb{E}_h\left[\text{\# keys that collide w/ any } k_i\right] \leq 1 + \alpha = 1 + \frac{n}{m}.
 \end{align*}
-We will prove this by linearity of expectation. Let $I_{ij} = \mathbbm{1}\left[h(k_i) = h(k_j)\right]$.
+We will prove this by linearity of expectation. Let $I_{ij} = \mathbf{1}\left[h(k_i) = h(k_j)\right]$.
 \begin{align*}
     \mathbb{E}_h\left[\text{\# keys that collide w/ } k_i\right] &= \mathbb{E}_{h \in \mathcal{H}} \sum_j I_{ij}\\
     &= \sum_j \mathbb{E}_{h \in \mathcal{H}}I_{ij} = \sum_j P(h(k_i) = h(k_j)\\
@@ -145,35 +178,183 @@ We will prove this by linearity of expectation. Let $I_{ij} = \mathbbm{1}\left[h
 \end{align*}
 Therefore, a universal hash family is guaranteed to uphold the optimal expected hash runtime.
 \subsection*{Constructing a Universal Hash Family: Dot Product Hash Function}
-How do we construct a universal hash function? One way is to populate the hash table with random uniformly generated values from $0$ to $m-1$. The issue with this is that a universal hash table would occupy a space of $\Theta(|U|)$ (where $|U|$ is the size of the universe, or the set of all hashable things), meaning it is highly impractical.\\
-\\
-The dot product hash family is a universal hash family that takes up less space and is more practical to implement. To implement the dot product hash function, we will first assume $m$ is prime and $|U| = m^r$. We can easily pad $U$ to be of size $m^r$ if it is not already. Then, we let the set of keys $\mathbf{k} = (k_0, k_1, ... k_{r-1})$ and the descriptions (coefficients) be $\mathbf{a} = (a_0, a_1, ... a_{r-1})$. Note that both $\mathbf{k}$ and $\mathbf{a}$ are vectors, so we define our hash function as $h_{\mathbf{a}} (\mathbf{k}) = \mathbf{a} \cdot \mathbf{k} \mod m = \sum_{i=0}^{r-1} a_i k_i \mod m$.\\
-\\
-The hash family $\mathcal{H}$ is described as the set of all $h_{\mathbf{a}}$ where all values of $\mathbf{a}$ are between 0 and $m-1$. Now, the space it occupies is $\Theta(r) = \Theta(\log |U|)$, which is more practical than $\Theta(|U|)$.\\
-\\
+How do we construct a universal hash function? One way is to populate the hash table with random uniformly generated values from $0$ to $m-1$. The issue with this is that a universal hash table would occupy a space of $\Theta(|U|)$ (where $|U|$ is the size of the universe, or the set of all hashable things), meaning it is highly impractical.
+
+The dot product hash family is a universal hash family that takes up less space and is more practical to implement. To implement the dot product hash function, we will first assume $m$ is prime and $|U| = m^r$. We can easily pad $U$ to be of size $m^r$ if it is not already. Then, we let the set of keys $\mathbf{k} = (k_0, k_1, ... k_{r-1})$ and the descriptions (coefficients) be $\mathbf{a} = (a_0, a_1, ... a_{r-1})$. Note that both $\mathbf{k}$ and $\mathbf{a}$ are vectors, so we define our hash function as $h_{\mathbf{a}} (\mathbf{k}) = \mathbf{a} \cdot \mathbf{k} \mod m = \sum_{i=0}^{r-1} a_i k_i \mod m$.
+
+The hash family $\mathcal{H}$ is described as the set of all $h_{\mathbf{a}}$ where all values of $\mathbf{a}$ are between 0 and $m-1$. Now, the space it occupies is $\Theta(r) = \Theta(\log |U|)$, which is more practical than $\Theta(|U|)$.
+
 Now, we need to prove that the dot product family is universal, or $P_h(h(k) = h(k')) \leq \frac{1}{m}$, where $k, k' \in \mathbb{R}^r$. Without loss of generality, assume that $k$ and $k'$ differ at their first location ($k_0 \neq k'_0$). We then have
 \begin{align*}
     P_\mathbf{a}(h_\mathbf{a}(k) = h_\mathbf{a} (k')) &= P_\mathbf{a} (\mathbf{a} \cdot k = \mathbf{a} \cdot k' \mod m)\\
     &= P_\mathbf{a} (a_0 (k_0 - k'_0) = \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m)
 \end{align*}
 Here, we note that the first term is guaranteed to not be 0 since $k_0 \neq k'_0$. That means we can calculate the modulo inverse $(k_0 - k'_0)^{-1}$ which is unique since $m$ is prime. This means that our expression evaluates to $P_\mathbf{a} (a_0 = (k_0 - k'_0)^{-1} \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m)$, meaning that the expression on the right is independent of $a_0$. This means that we can first pick $a_1 ... a_{r-1}$ at random and then pick $a_0$ at random independently (principle of deferred decisions). If we let $(k_0 - k'_0)^{-1} \sum_{i=1}^{r-1} a_i (k_i' - k_i) \mod m = k$, then we can see that $P(a_0 = k) = \frac{1}{m}$ and therefore the dot product hash family is universal.
-\section{Hashing II}
-We will continue to discuss different hashing strategies.
 \subsection*{Open Addressing}
-Open addressing is when instead of having a hashing function $h(x)$, you have a probing function $p(x, i)$ that instructs you how to reselect an entry in the hash table if the current entry is occupied.\\
-When you select a key, you first compute $p(x, 0)$. If the table at $p(x, 0)$ is vacant, you can place the key there. If occupied, you keep incrementing $i$ until you reach a $p(x, i)$ that is vacant.\\
-\\
+Open addressing is when instead of having a hashing function $h(x)$, you have a probing function $p(x, i)$ that instructs you how to reselect an entry in the hash table if the current entry is occupied.
+
+When you select a key, you first compute $p(x, 0)$. If the table at $p(x, 0)$ is vacant, you can place the key there. If occupied, you keep incrementing $i$ until you reach a $p(x, i)$ that is vacant.
+
 When deleting elements from the table, you need to place a marker indicating an element was deleted so the search operation for the hash set knows to continue looking further in the sequence. However, a spot belonging to a deleted element can still be overwritten by new inserts.
 \subsubsection*{Uniform hashing assumption}
 Assume that every probing function generates a sequence $p(k, 0)$, ... $p(k, m-1)$ that is a uniformly random permutation of $\{0 ... m-1\}$. Then, the probability that each $p(k, i)$ hits an empty slot is $1 - \alpha$, meaning the expected number of probes you will need to perform is upper-bounded by $\frac{1}{1 - \alpha}$.
 \subsubsection*{Open Addressing in Practice}
 One example of open addressing is linear probing, where $p(k, i) = h(k) + i \mod m$ and $h$ is a hash function selected from a uniform hash family. The issue with linear probing is that it results in clusters of occupied spaces that could compromise efficiency. Quadratic probing where $p(k, i) = h(k) + i^2 \mod m$ breaks up these clusters. Double hashing is where you select two hash functions $h_1$ and $h_2$ from the uniform hash family and $p(k, i) = h_1(k) + i\times h_2(k) \mod m$.
 \subsection*{Perfect Hashing}
-Perfect Hashing is a solution to a static dictionary problem where you are given $n$ keys to build a hash table in $O(n) \log ^c (n)$ build time that occupies $O(n)$ space and has $O(1)$ worst case search time. Since it is a static dictionary, no keys will be deleted.\\
-\\
+Perfect Hashing is a solution to a static dictionary problem where you are given $n$ keys to build a hash table in $O(n) \log ^c (n)$ build time that occupies $O(n)$ space and has $O(1)$ worst case search time. Since it is a static dictionary, no keys will be deleted.
+
 We will accomplish this using a hash table of capacity $m$ and associated hash function $h_1$. For each spot $j$, we point to a hash table of size $l_j^2$ where $l_j$ is the number of collisions that occur at position $j$ and associated hash $h_{2,j}$. If $\sum l_j^2 < cn$ for some predetermined $c$, we reselect $h_1$. Then, we select hash functions for the smaller hash tables, and if there is a collision in the small hash table at any $j$, we reselect $h_{2, j}$. Therefore, we only need 2 accesses to search for any element in the table.
 \subsubsection*{Analysis}
-We look at the expected number of times we will need to reselect $h_2$. For a fixed $j$, the probability $P(h_{2, j}(k) = h_{2, j}(k')) \leq {l_j \choose 2} \times \frac{1}{l_j^2} \leq \frac{1}{2}$, meaning that the expected number of times you would need to reselect is 2 for each $j$.\\
-\\
+We look at the expected number of times we will need to reselect $h_2$. For a fixed $j$, the probability $P(h_{2, j}(k) = h_{2, j}(k')) \leq {l_j \choose 2} \times \frac{1}{l_j^2} \leq \frac{1}{2}$, meaning that the expected number of times you would need to reselect is 2 for each $j$.
+
 We now look at the expected number of times we need to reselect $h_1$, or the probability that $\mathbb{E}(\sum l_j^2) \leq c n$. Observing that $l_j$ elements means $l_j \choose 2$ collisions under $h_1$, $\mathbb{E}(\sum l_j^2) \leq \mathbb{E}($number of collisions under $h_1) + O(n)$. This is less than or equal to ${n \choose 2}*\frac{1}{m} + O(n) = c' n$, meaning that the probability of reselecting is bounded by $\frac{c'}{c}$ via Markov.
+
+\section{Max Flow}
+We are given a directed graph $G$ with source node $s$ and destination node $t$. Every edge $(u, v)$ of the graph has a capacity $c_{uv}$ and we want to find the maximum possible outgoing flow from the source such that the flow through each edge $(u, v)$ is $f_{uv} \leq c_{uv}$ (does not exceed capacity) and $\sum_{i \in \text{in}} f_{ui} = \sum_{i \in \text{out}} f_{ui}$ for $u \neq \{s, t\}$ (flow conservation, ie no accumulation of flow at intermediate nodes). We also define $f_{uv} = - f_{vu}$. The max flow problem cannot be solved greedily because the process of optimizing flow is non-monotonically increasing.
+
+\subsection*{Max Flow Min Cut}
+We define a \textit{cut} of a graph as any partition of its nodes $V$ into $S, T$ where $S$ contains $s$ and $T$ contains $t$. It can be proven that the flow through any cut $f(S, T) = \sum_{x \in S, y \in T} f(x, y)$ is constant for any cut given a flow graph $G$:
+\begin{align*}
+    &\text{Let }T = V - S:\\
+    &f(S, T) = f(S, V - S) = f(S, V) - f(S, S) = f(S, V)\\
+    &\text{Observe that } f(S, S) = 0 \text{ via flow conservation.}\\
+    &f(S, V) = f(s, V) + f(S - s, V) = f(s, V)\\
+    &f(S - s, V) \text{ is also 0 via flow conservation as }S-s\text{ consists entirely of intermediate nodes.}
+\end{align*}
+$f(s, V)$ is constant for the entire graph.
+
+Formally, the max flow min cut theorem states that the following are equivalent:
+\begin{enumerate}
+    \item $|f| = c(S, T)$ for some cut $(S, T)$
+    \item $f$ is a maximum flow
+    \item $f$ admits no augmenting path $S$ (an augmenting path is a path from $s$ to $t$ in $G_f$).
+\end{enumerate}
+
+$1 \implies 2$ is trivial. Because $|f| \leq c(S, T)$ for any cut $c(S, T)$ by definition, then the case where $|f| = c(S, T)$ must be a maximum flow.
+
+$2 \implies 3$ can be proven via contradiction. If there existed an augmenting path $c_f(p) \geq 1$ (importantly, flows are integral), then $f$ could be increased further.
+
+$3 \implies 1$ can be proven as follows: If $f$ admits no augmenting path, then define $S$ as the subset of nodes $v \in V$ in which there exists a path from $s$ to $v$ and $T = V-S$ all nodes unreachable in $G_f$ from source. $(S, T)$ forms a cut and the flow across the cut must be at capacity for some edge (as there is no edge in the residual graph).
+
+\subsubsection*{Residual Graphs}
+We can model the max flow min cut problem via a residual graph. A residual graph $G_f$ of a flow graph $G$ has edge weights $c_f(u, v) = c(u, v) - f(u, v) > 0$. Importantly, we also calculate backward edges where capacity is zero and flow is negative. If we can find a path from $s$ to $t$ on $G_f$, this means that the flow can still be increased (meaning we have not yet found the max flow). If there is no path from $s$ to $t$, then the flow is a max flow.
+\subsection*{Max Flow Algorithms}
+\subsubsection*{Ford Fulkerson}
+The Ford-Fulkerson algorithm goes as follows:
+\begin{enumerate}
+    \item Set all flows to 0.
+    \item While there exists an augmenting path $p$ in $G_f$, augment the flow at each edge $e$ in $p$ by $c_f(e)$.
+    \item Continue until max flow is achieved.
+\end{enumerate}
+Correctness of Ford-Fulkerson follows directly from the max flow min cut theorem. The runtime of Ford-Fulkerson is given by $O(|f^*|E)$ where $|f^*|$ is the max flow and $E$ is the number of edges.
+\subsubsection*{Edmonds-Karp}
+Sometimes, it may be more beneficial to use the Edmonds-Karp algorithm instad of Ford-Fulkerson (such as when flows are large or non-integers). Edmonds-Karp runs in $O(VE^2)$ where $V$ is the number of nodes and $E$ is the number of edges.
+\section{Minimum Spanning Trees}
+Given a graph $G$, we want to find a spanning tree $T$ (a tree that covers all nodes $V \in G$) of minimum weight.
+\subsection*{Generic Algorithm}
+The generic algorithm for constructing an MST is as follows:
+\begin{enumerate}
+    \item Set the prospective MST $A$ to the empty set.
+    \item While $A$ is not a spanning tree, find an edge $(u, v)$ that is \textit{safe} to add to $A$ and augment.
+    \item At the end of the algorithm, $A$ should be a minimum spanning tree.
+\end{enumerate}
+Now, we need to find a way to guarantee that an edge is safe. To do this, we first establish some definitions. A \textit{cut} is a partition of the graph nodes into $(S, V-S)$. An edge \textit{crosses} a cut if the two endpoint nodes are on different sides of the cut. The cut \textit{respects} a set of edges $A$ if no edge in $A$ crosses the cut. An edge is a \textit{light edge} if it is the minimum weight edge that crosses the cut.
+
+We set out to prove that given a connected graph $G$, a subset $A \in E$ of nodes, a cut $(S, V-S)$ that respects $A$, and a light edge $(u, v)$ crossing the cut, that $(u, v)$ is a safe edge for $A$. In other words, the new set of edges $A \cup \{(u, v)\}$ is a subset of some MST of $G$.
+
+Let $T$ be a minimum spanning tree that includes $A$. Assume that $T$ does not contain the light edge $(u, v)$. We will construct a second MST $T'$ that does contain $(u, v)$, which shows that $(u, v)$ is a safe edge.
+
+If $T$ is a MST, there must be some edge that crosses the cut. We call this edge $(u', v')$. We can construct $T' = T - \{(u', v')\} + \{(u, v)\}$. Since $(u, v)$ is by definition the light edge crossing the cut, $w(u', v') \geq w(u, v)$. Since $T'$ and $T$ are both MSTs, they must be the same weight. Therefore, $(u, v)$ is a safe edge for $A$.
+
+\subsection*{Kruskal's Algorithm}
+Kruskal's Algorithm greedily selects the safe edge to be the lowest weight edge not in $A$ that doesn't form a cycle with $A$. Formally, the algorithm is as follows:
+\begin{enumerate}
+    \item Set $T$ to the empty set
+    \item Sort edges in non-decreasing order and iterate.
+    \item If an edge connects two unconnected components, add to $T$. Else, discard and continue.
+    \item Terminate when all vertices are in the same connected component.
+\end{enumerate}
+Proof of correctness follows directly from the MST theorem. The cut is $(T, V-T)$ and respects $T$, and by the greedy algorithm, the next edge that connects two unconnected components is guaranteed to be a light edge.
+
+\subsection*{Prim's Algorithm}
+Prim's algorithm for finding MSTs is highly similar to Dijkstra's shortest path algorithm. We consider two versions.
+
+The naive Prim's algorithm is as follows:
+\begin{enumerate}
+    \item Start with a vertex $s$.
+    \item Let $T = (T_V, T_E)$. $T_V$ is the vertex set and initialized to just $\{s\}$. $T_E$ is the edge set and initialized to the empty set.
+    \item While $T$ is not a spanning tree, find the lowest edge connecting a node in $T_V$ to a node in $V - T_V$.
+    \item Return the spanning tree $T$.
+\end{enumerate}
+
+We can prove correctness by showing that the new edge is safe. The cut $(T_V, V - T_V)$ respects $T_V$, and the new edge added is the minimum weight edge that connects a node in $T_V$ to a node in $V - T_V$, meaning that it is a light edge.
+
+\subsection*{Optimized Prim’s Algorithm}
+The naive algorithm is of runtime $O(VE)$, but the algorithm can be optimized by using a priority queue to select for the lowest weight edges:
+\begin{enumerate}
+    \item Set a priority queue $Q$ to just the starting node $\{s\}$.
+    \item We start at $s$ and set the key of $s$ to 0. The key of all other nodes is set to infinity.
+    \item While $Q$ is not empty:
+    \begin{enumerate}
+        \item $u$ = extract\_min($Q$)
+        \item add $u$ to $T$
+        \item for each neighbor $v$ of $u$:
+        \begin{enumerate}
+             \item if $v$ is not in $Q$ and $w(u, v)$ < key of $v$, set key of $v$ to $w(u, v)$ and set parent of $v$ to $u$.
+        \end{enumerate}
+    \end{enumerate}
+    \item return $s$ and the parent array.
+\end{enumerate}
+
+This runtime is $O(V + E \log V)$ if we use the Fibonacci heap.
+
+\section{Linear Programming}
+Linear Programming is an optimization problem with linear constraints and a linear objective function.
+\subsection*{Normal Form}
+In normal form, our variable is $x \in \mathbb{R}^{n \times 1}$. We seek to maximize the objective $c^T x$ under the constraints $Ax \leq b$ and $x \geq 0$.
+
+We can convert any set of linear constraints to normal form. If we have a minimization problem, we simply take a negative to turn into a maximization problem. Similarly, if we have geq constraints, we take a negation and flip the inequality. If we have equality constraints, we just turn it into separate geq and leq constraints. If we have unconstrained variables that can be negative, we perform a transformation $x := x^+ - x^-$ where $x^+$ and $x^-$ are both strictly nonnegative.
+
+\subsection*{Solving a Linear Program}
+It is useful to think of the linear program as a geometric problem where each constraint sections the $n$ dimensional variable space into a half plane. The solution space lies in the intersection of all half planes and it is provable that the optimal solution lies at one of the vertices of the solution space. In a linear program with $m$ constraints and $n$ variables, there are ${m+n \choose n} \approx O(2^n)$ potential vertices to try, so naive enumeration is an infeasible solution. There have been multiple algorithms proposed to solve linear programming.
+
+The earliest algorithm is the Simplex algorithm, which walks from vertex to vertex. In practice, the Simplex algorithm works well, although the worst case of the algorithm is technically $O(2^n)$.
+
+Another algorithm is the Ellipsoid algorithm which tests how large an ellipsoid can be embedded in the feasible region. This algorithm is polynomial time $O(n^c)$, but it is infeasible in practice due to large constants.
+
+The third algorithm, the Interior Point Algorithm, provides the best of both worlds with a runtime of approximately $O(n^{3.5})$.
+
+\subsection*{Duality}
+Every linear program has a corresponding dual program which can be thought of as obtaining a linear combination of the constraints from the original, or primal, program. To motivate this problem, we want to determine a method of verifying whether or not a solution to the primal program is optimal. If we set a linear combination of the constraints to be algebraically greater than or equal to the primal objective and minimize that, then we can determine an upper bound for the optimum.
+
+Formally, given a primal program $P$ as $\max_x c^T x, Ax \leq b, x \geq 0$, its corresponding dual $D$ is $\min_y b^T y, A^T y \geq c, y \geq 0$ which is also a linear program. Importantly, the dual of the dual is the primal program.
+
+\subsubsection*{Weak Duality}
+Given a pair of primal and dual programs $(P, D)$ and $x^*, y^*$ being the optimal values of $x$ and $y$ for $P$ and $D$ respectively, $c^T x^* \leq b^T y^*$. This can be shown algebraically:
+\begin{align*}
+    \text{Consider }&(y^*)^T A x^*.\\
+    &(y^*)^T A x^* \geq c^T x^* \text{ via the dual constraint.}\\
+    &(y^*)^T A x^* \leq (y^*)^T b \text{ via the primal constraint.}\\
+    \text{Therefore, }&c^T x^* \leq b^T y^*.
+\end{align*}
+
+\subsubsection*{Strong Duality}
+It can be shown that given optima $x^*, y^*$ of primal-dual pair $(P, D)$, $c^T x^* = b^T y^*$. Therefore, to check whether a given pair $x^*, y^*$ are optimal, we first verify that they are feasible solutions and then check for equality of the objective functions.
+
+\subsection*{Applications}
+\subsubsection*{Max Flow}
+The max flow problem can be represented as a linear program. Our variables are the flows through each edge. We seek to optimize the sum of all flows, given that each flow must not exceed capacity, all flows are nonnegative, and the sum of incoming flows equals the sum of outgoing flows at each node.
+
+\subsubsection*{Zero-Sum games}
+Consider a zero-sum two player game where the payoff matrix for player 1 is $A$ and the payoff matrix for player 2 is $-A$. Given probabilistic strategies $p$ for player 1 and $q$ for player 2, the expected payoff of the game for player 1 is $p^T A q$ (and negative for player 2). We can model this as a linear program.
+
+For a given strategy $p$, player 2 will attempt to find $\min_q (p^T A) q$ given $\sum q = 1, q \geq 0$. After this $q$ is selected, player 1 finds the maximum $p$. Overall,
+\begin{align*}
+    q^* &= \arg\min_q p^T A q\\
+    p^* &= \arg\max_p \min_q p^T A q\\
+    V_r &= \max_p \min_q p^T A q
+\end{align*}
+
+The \textbf{von Neumann theorem}, also known as the \textbf{minmax theorem}, states that $\max_p \min_q p^T A q = \min_q \max_p p^T A q$. This can be proven via strong duality. Additionally, the $p^*$ and $q^*$ found through this process form a Nash Equilibrium of the game.
+
 \end{document}
